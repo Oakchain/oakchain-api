@@ -4,7 +4,8 @@ import { SAMSON_CONFIGS, SAMSON_UTILS } from 'sm-pkjs/dist';
 import { UserService } from '../service';
 import { customAlphabet } from 'nanoid';
 import { numbers } from 'nanoid-dictionary';
-import { verify } from '../mailTemplates/verify';
+import Tools from '../utils/toolbox';
+const { comparePassword, hashPassword } = Tools;
 
 const nanoid = customAlphabet(numbers, 6);
 const {
@@ -17,16 +18,20 @@ const {
 
 export async function createUser(req: Request, res: Response) {
   try {
-    const { email } = req.body;
+    const { email, password } = req.body;
     const token = createToken({ email }, '48h');
     const link = `${FRONTEND_URL}/verify?token=${token}`;
-    const user = await UserService.createUser({
+
+    const hashedPassword = password ? await hashPassword(password) : undefined;
+
+    await UserService.createUser({
       ...req.body,
+      hashedPassword,
     });
 
-    // todo
-    // send a welcome mail
-    const message = `Welcome ${email}! `;
+    const message = `Welcome ${email}!`;
+
+    await sendEmail(email, 'Welcome', message);
 
     return res.status(StatusCode.OK).json({
       status: !!ResponseCode.SUCCESS,
@@ -42,29 +47,41 @@ export async function createUser(req: Request, res: Response) {
 
 export async function logIn(req: Request, res: Response) {
   try {
-    const { email, otp } = req.body;
+    const { email, password, otp } = req.body;
 
-    if (!otp)
+    if (!otp && !password) {
       return res.status(StatusCode.BAD_REQUEST).json({
         status: !!ResponseCode.FAILURE,
-        message: 'Please enter OTP',
+        message: 'Please enter OTP or password',
       });
+    }
 
     const user = (await UserService.getUserByEmail(email)) as unknown as UserInterface;
 
-    if (!user)
+    if (!user) {
       return res.status(StatusCode.BAD_REQUEST).json({
         status: !!ResponseCode.FAILURE,
         message: 'User not found',
       });
+    }
 
-    const token = createToken({ email }, '48h');
-
-    if (user.otp !== otp)
+    if (otp && user.otp !== otp) {
       return res.status(StatusCode.BAD_REQUEST).json({
         status: !!ResponseCode.FAILURE,
         message: 'Invalid OTP',
       });
+    }
+
+    if (password) {
+      if (!(await comparePassword(password, String(user.hashedPassword)))) {
+        return res.status(StatusCode.BAD_REQUEST).json({
+          status: !!ResponseCode.FAILURE,
+          message: 'Invalid password',
+        });
+      }
+    }
+
+    const token = createToken({ email }, '48h');
 
     user.otp = undefined;
     user.token = token;

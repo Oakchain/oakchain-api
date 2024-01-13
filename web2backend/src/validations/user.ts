@@ -7,6 +7,7 @@ const user = {
       firstname: joi.string().optional().label('Firstname is required'),
       lastname: joi.string().optional().label('Lastname is required'),
       email: joi.string().email().required().label('Email is required'),
+      password: joi.string().label('Password is required'),
       gender: joi
         .string()
         .valid('male', 'female', 'prefer not to say')
@@ -51,19 +52,6 @@ const user = {
         .optional()
         .label('social'),
       about: joi.string().optional().label('about'),
-    });
-    const { error } = schema.validate(payload);
-    if (error) throw error.details[0].context.label;
-    return true;
-  },
-
-  async validateOnboardingRequest(payload: any) {
-    const schema = joi.object({
-      requestStatus: joi
-        .string()
-        .valid('approved', 'rejected')
-        .required()
-        .label('Request status is required. approved or rejected'),
     });
     const { error } = schema.validate(payload);
     if (error) throw error.details[0].context.label;

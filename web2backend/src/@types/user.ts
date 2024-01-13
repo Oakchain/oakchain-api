@@ -20,6 +20,7 @@ export interface UserInterface extends Document {
   dob?: string;
   phoneNumber?: string;
   otp?: string;
+  hashedPassword?: string;
   image?: string;
   role: {
     super?: boolean;
@@ -43,6 +44,7 @@ export type RegisterType = {
   lastname: string;
   dob: string;
   gender: Gender;
+  password?: string;
 };
 
 export type UpdateUserType = {

@@ -1,11 +1,20 @@
 import { UserQueryType } from '../@types/user';
 import { IssueQueryType } from '../@types';
+import crypto from 'crypto';
 
 /**
  * Function for api tools methods
  * @function Toolbox
  */
 const Tools = {
+  hashPassword: async (password: string): Promise<string> => {
+    return crypto.createHash('sha256').update(password).digest('hex');
+  },
+
+  async comparePassword(password: string, hash: string): Promise<boolean> {
+    return (await Tools.hashPassword(password)) === hash;
+  },
+
   generateOTP(): number {
     return Math.floor(100000 + Math.random() * 900000);
   },

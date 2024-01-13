@@ -42,6 +42,7 @@ const UserSchema = new mongoose.Schema(
       type: String,
       required: [false],
     },
+    hashedPassword: String,
     image: String,
     role: {
       super: { type: Boolean, default: false },
