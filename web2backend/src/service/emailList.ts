@@ -34,6 +34,19 @@ class EmailListService {
     }
   }
 
+    async findOneEmail(email: string) {
+      try {
+        const emailList = await EmailList.findOne({ email });
+        return emailList;
+      } catch (error) {
+        throw new ApiError(
+          'impact api',
+          error as string,
+          'findOneEmail',
+          StatusCode.INTERNAL_SERVER_ERROR
+        );
+      }
+    }
 }
 
 export default new EmailListService();
