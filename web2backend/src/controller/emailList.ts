@@ -14,6 +14,14 @@ export async function saveEmail(req: Request, res: Response) {
       });
     }
 
+    const emailExists = await EmailListService.findOneEmail(email);
+    if (emailExists) {
+      return res.status(StatusCode.ALREADY_EXISTS).json({
+        status: !!ResponseCode.FAILURE,
+        message: 'Email already exists',
+      });
+    }
+
     await EmailListService.saveEmail({ email });
 
     return res.status(StatusCode.OK).json({
